@@ -1,20 +1,21 @@
-on: [push]
-
+name: sigma
+on:
+  push:
+    branches: [ main, master, develop, stage, release ]
+  pull_request:
+    branches: [ main, master, develop, stage, release ]
+  workflow_dispatch:
 jobs:
-  sigma_download_script:
+  sigma:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2   
-
-
-      - name: Download SIGMA
-        run: curl -k -L https://sig-repo.synopsys.com/artifactory/sigma-release-trial/2024.3.0/sigma-linux_x86_64   
-
-      - name: SIGMA analysis
-        run: ./sigma analyze --format github .      
-
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v1
-        with:
-          sarif_file: sigma-results.json
+    - name: Checkout Source
+      uses: actions/checkout@v4
+    - name: Download SIGMA
+      run: curl -fLsS -o ${{ runner.temp }}/sigma ${{ vars.SIGMA_DOWNLOAD_URL }} && chmod +x ${{ runner.temp }}/sigma
+    - name: SIGMA analysis
+      run: ${{ runner.temp }}/sigma analyze --format github .
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: sigma-results.json
